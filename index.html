@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master One Fabrics & Tailors</title>
+
+<!-- Supabase (free cloud database - shared across every device) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root{
+    --ink:#2b2870;
+    --ink-soft:#4a4696;
+    --paper:#eceafc;
+    --paper-deep:#dcd8f7;
+    --card:#f6f5fd;
+    --brass:#b9862f;
+    --brass-dark:#8f6420;
+    --line:#c3bdf0;
+    --danger:#a8425a;
+    --shadow: 0 6px 18px rgba(43,40,112,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,var(--paper) 0%, var(--paper-deep) 100%);
+    font-family: 'Georgia', 'Palatino Linotype', serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  header{
+    padding:22px 16px 14px;
+    text-align:center;
+    border-bottom:2px dotted var(--ink-soft);
+    background:var(--paper);
+    position:relative;
+  }
+  .brand{
+    font-family: 'Brush Script MT', 'Segoe Script', cursive;
+    font-size:2.1rem;
+    color:var(--ink);
+    margin:0;
+    line-height:1;
+  }
+  .brand small{
+    font-family: 'Georgia', serif;
+    font-style:italic;
+    font-size:1rem;
+    color:var(--ink-soft);
+    margin-left:6px;
+  }
+  .tagline{
+    font-size:0.8rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--brass-dark);
+    margin-top:6px;
+  }
+  .session-bar{
+    max-width:520px;
+    margin:10px auto 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    padding:0 16px;
+  }
+  .session-bar button{
+    background:none;
+    border:1px solid var(--ink-soft);
+    color:var(--ink-soft);
+    border-radius:6px;
+    padding:4px 10px;
+    font-family:inherit;
+    font-size:0.75rem;
+    cursor:pointer;
+  }
+  nav{
+    display:flex;
+    gap:8px;
+    padding:14px 16px 0;
+    max-width:520px;
+    margin:0 auto;
+  }
+  nav button{
+    flex:1;
+    padding:10px 8px;
+    border:1.5px solid var(--ink-soft);
+    background:var(--card);
+    color:var(--ink-soft);
+    border-radius:8px 8px 0 0;
+    font-family:inherit;
+    font-size:0.92rem;
+    cursor:pointer;
+    border-bottom:none;
+  }
+  nav button.active{
+    background:var(--paper);
+    color:var(--ink);
+    font-weight:bold;
+    border-color:var(--ink);
+  }
+  main{
+    max-width:520px;
+    margin:0 auto;
+    padding:16px;
+  }
+  .panel{
+    background:var(--card);
+    border:1.5px solid var(--ink-soft);
+    border-radius:0 10px 10px 10px;
+    padding:16px;
+    box-shadow:var(--shadow);
+  }
+  .row-serial{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .serial-badge{
+    background:var(--ink);
+    color:var(--paper);
+    font-weight:bold;
+    padding:6px 14px;
+    border-radius:20px;
+    font-size:1.05rem;
+    letter-spacing:0.03em;
+  }
+  .serial-edit{
+    font-size:0.75rem;
+    color:var(--brass-dark);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;border:none;font-family:inherit;
+  }
+  label{
+    display:block;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    margin:10px 0 3px;
+  }
+  input[type=text], input[type=tel], input[type=date], input[type=number], input[type=password]{
+    width:100%;
+    padding:9px 10px;
+    border:none;
+    border-bottom:1.5px dotted var(--ink-soft);
+    background:transparent;
+    font-family:inherit;
+    font-size:0.98rem;
+    color:var(--ink);
+  }
+  input:focus{ outline:none; border-bottom:1.5px solid var(--brass); }
+  .measure-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0 14px;
+    margin-top:8px;
+    padding-top:10px;
+    border-top:2px dotted var(--ink-soft);
+  }
+  .measure-grid label{ margin-top:12px; }
+  .notes-field{ margin-top:6px; }
+  textarea{
+    width:100%;
+    border:1.5px dotted var(--ink-soft);
+    border-radius:6px;
+    background:transparent;
+    font-family:inherit;
+    padding:8px;
+    font-size:0.9rem;
+    color:var(--ink);
+    resize:vertical;
+    min-height:44px;
+  }
+  .btn{
+    display:inline-block;
+    padding:10px 18px;
+    border-radius:7px;
+    border:1.5px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+    font-family:inherit;
+    font-size:0.95rem;
+    cursor:pointer;
+  }
+  .btn.secondary{
+    background:transparent;
+    color:var(--ink);
+  }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .actions{
+    margin-top:16px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .search-box{
+    width:100%;
+    padding:10px 12px;
+    border:1.5px solid var(--ink-soft);
+    border-radius:8px;
+    background:var(--card);
+    font-family:inherit;
+    margin-bottom:8px;
+  }
+  .search-hint{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    margin-bottom:12px;
+    font-style:italic;
+  }
+  .record{
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    box-shadow:var(--shadow);
+  }
+  .record-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .record-name{ font-weight:bold; font-size:1.05rem; }
+  .record-serial{ color:var(--brass-dark); font-weight:bold; }
+  .record-sub{ font-size:0.82rem; color:var(--ink-soft); margin-top:2px; }
+  .record-measures{
+    margin-top:8px;
+    font-size:0.85rem;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:4px 10px;
+    color:var(--ink);
+    display:none;
+  }
+  .record-measures.show{ display:grid; }
+  .record-measures span b{ color:var(--ink-soft); font-weight:normal; }
+  .record-actions{
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .record-actions button{
+    flex:1;
+    min-width:70px;
+    padding:7px 4px;
+    font-size:0.82rem;
+    border-radius:6px;
+    border:1.3px solid var(--ink-soft);
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .user-card{
+    background:var(--card);
+    border:1.5px solid var(--line);
+    border-radius:9px;
+    padding:14px;
+    margin-bottom:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:var(--shadow);
+  }
+  .user-info{
+    flex:1;
+  }
+  .user-name{
+    font-weight:bold;
+    font-size:1.02rem;
+    color:var(--ink);
+  }
+  .user-email{
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .user-status{
+    font-size:0.75rem;
+    margin-top:6px;
+    padding:4px 8px;
+    border-radius:4px;
+    display:inline-block;
+  }
+  .user-status.active{
+    background:rgba(43,40,112,0.1);
+    color:var(--ink);
+  }
+  .user-status.banned{
+    background:rgba(168,66,90,0.15);
+    color:var(--danger);
+    font-weight:bold;
+  }
+  .toggle-btn{
+    padding:8px 16px;
+    border-radius:6px;
+    border:1.3px solid var(--brass-dark);
+    background:var(--brass);
+    color:white;
+    font-family:inherit;
+    font-size:0.82rem;
+    cursor:pointer;
+    margin-left:12px;
+  }
+  .toggle-btn.banned{
+    background:var(--danger);
+    border-color:var(--danger);
+  }
+  .empty{
+    text-align:center;
+    color:var(--ink-soft);
+    padding:30px 10px;
+    font-style:italic;
+  }
+  .count-info{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-top:10px;
+  }
+  .toast{
+    position:fixed;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:var(--paper);
+    padding:10px 18px;
+    border-radius:20px;
+    font-size:0.88rem;
+    box-shadow:var(--shadow);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s;
+    z-index:50;
+  }
+  .toast.show{ opacity:1; }
+
+  #loginScreen{
+    position:fixed;
+    inset:0;
+    background:linear-gradient(180deg,var(--paper) 0%, var(--paper-deep) 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:16px;
+  }
+  .login-card{
+    background:var(--card);
+    border:1.5px solid var(--ink-soft);
+    border-radius:12px;
+    padding:28px 24px;
+    width:100%;
+    max-width:380px;
+    box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .login-card .brand{ font-size:1.9rem; }
+  .login-card .tagline{ margin-bottom:18px; }
+  .login-card label{ text-align:left; }
+  .login-error{
+    color:var(--danger);
+    font-size:0.82rem;
+    margin-top:10px;
+    min-height:1.1em;
+  }
+  .login-card .btn{ width:100%; margin-top:16px; }
+  #appRoot{ display:none; }
+
+  #printArea{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{
+      display:block;
+      position:absolute;
+      top:0; left:0; width:100%;
+      padding:20px;
+    }
+    .p-brand{ font-family:'Brush Script MT', cursive; font-size:2rem; }
+    .p-row{ display:flex; justify-content:space-between; border-bottom:1px dotted #333; padding:6px 0; }
+    .p-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px 20px; margin-top:14px; }
+    .p-grid div{ border-bottom:1px dotted #333; padding:5px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <h1 class="brand">Master One <small>Fabrics &amp; Tailors</small></h1>
+    <div class="tagline">পরিমাপ ব্যবস্থাপনা সফটওয়্যার</div>
+    <label>ইউজারনেম</label>
+    <input type="text" id="login_user" placeholder="ইউজারনেম লিখুন" autocomplete="username">
+    <label>পাসওয়ার্ড</label>
+    <input type="password" id="login_pass" placeholder="পাসওয়ার্ড লিখুন" autocomplete="current-password">
+    <div class="login-error" id="loginError"></div>
+    <button class="btn" id="loginBtn" onclick="attemptLogin()">লগইন করুন</button>
+  </div>
+</div>
+
+<div id="appRoot">
+<header>
+  <h1 class="brand">Master One <small>Fabrics &amp; Tailors</small></h1>
+  <div class="tagline">পরিমাপ ব্যবস্থাপনা সফটওয়্যার • Supabase Cloud</div>
+</header>
+<div class="session-bar">
+  <span id="whoami"></span>
+  <button onclick="logout()">লগ-আউট</button>
+</div>
+
+<nav>
+  <button id="tabNewBtn" class="active" onclick="switchTab('new')">নতুন এন্ট্রি</button>
+  <button id="tabListBtn" onclick="switchTab('list')">সব রেকর্ড</button>
+  <button id="tabUsersBtn" style="display:none;" onclick="switchTab('users')">ইউজার ম্যানেজমেন্ট</button>
+</nav>
+
+<main>
+
+  <div id="tabNew" class="panel">
+    <div class="row-serial">
+      <div class="serial-badge">নং <span id="orderNoDisplay">...</span></div>
+      <button class="serial-edit" id="serialEditBtn" onclick="editSerial()">নম্বর পরিবর্তন</button>
+    </div>
+
+    <label>নাম (Name)</label>
+    <input type="text" id="f_name" placeholder="গ্রাহকের নাম">
+
+    <label>মোবাইল (Mob)</label>
+    <input type="tel" id="f_mob" placeholder="017XXXXXXXX">
+
+    <label>তারিখ (Date)</label>
+    <input type="date" id="f_date">
+
+    <div class="measure-grid">
+      <div><label>Length</label><input type="text" id="f_length"></div>
+      <div><label>Chest</label><input type="text" id="f_chest"></div>
+      <div><label>Bely</label><input type="text" id="f_belly"></div>
+      <div><label>Hip</label><input type="text" id="f_hip"></div>
+      <div><label>Shoulder</label><input type="text" id="f_shoulder"></div>
+      <div><label>Hand...L</label><input type="text" id="f_handl"></div>
+      <div><label>Hand...B</label><input type="text" id="f_handb"></div>
+      <div><label>Wrist</label><input type="text" id="f_wrist"></div>
+    </div>
+
+    <label class="notes-field">নোট (ঐচ্ছিক)</label>
+    <textarea id="f_notes" placeholder="বিশেষ কোনো নির্দেশনা..."></textarea>
+
+    <div class="actions">
+      <button class="btn" id="saveBtn" onclick="saveRecord()">সংরক্ষণ করুন</button>
+      <button class="btn secondary" onclick="clearForm()">খালি করুন</button>
+    </div>
+  </div>
+
+  <div id="tabList" class="panel" style="display:none;">
+    <input type="text" class="search-box" id="searchBox" placeholder="নাম বা মোবাইল নম্বর দিয়ে খুঁজুন..." oninput="onSearchInput()">
+    <div class="search-hint">টিপ: মোবাইল নম্বরের যেকোনো অংশ লিখলেও রেজাল্ট আসবে</div>
+    <div id="listContainer"></div>
+    <div class="count-info" id="countInfo"></div>
+  </div>
+
+  <div id="tabUsers" class="panel" style="display:none;">
+    <h3 style="color:var(--ink); margin-top:0;">ইউজার ম্যানেজমেন্ট</h3>
+    <div id="usersContainer"></div>
+  </div>
+
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="printArea">
+  <div class="p-brand">Master One <span style="font-family:Georgia,serif;font-size:1rem;">Fabrics &amp; Tailors</span></div>
+  <div class="p-row"><span>Name: <b id="p_name"></b></span><span>No: <b id="p_serial"></b></span></div>
+  <div class="p-row"><span>Mob: <b id="p_mob"></b></span><span>Date: <b id="p_date"></b></span></div>
+  <div class="p-grid">
+    <div>Length - <b id="p_length"></b></div>
+    <div>Chest - <b id="p_chest"></b></div>
+    <div>Bely - <b id="p_belly"></b></div>
+    <div>Hip - <b id="p_hip"></b></div>
+    <div>Shoulder - <b id="p_shoulder"></b></div>
+    <div>Hand...L - <b id="p_handl"></b></div>
+    <div>Hand...B - <b id="p_handb"></b></div>
+    <div>Wrist - <b id="p_wrist"></b></div>
+  </div>
+  <div style="margin-top:14px;">Notes: <span id="p_notes"></span></div>
+</div>
+
+<script>
+/* ============================================================
+   1) PASTE YOUR SUPABASE PROJECT URL AND ANON KEY HERE
+   (Supabase dashboard -> Project Settings -> API)
+   ============================================================ */
+const SUPABASE_URL = 'https://pbfasupxspkyjpdgekhf.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_JSbP1WXgInvoV-XXdND1cA_kovuWmcU';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ============================================================
+   2) LOGIN
+   Supabase Auth needs an email, so each shop username is mapped
+   to a fixed email address behind the scenes. Create these exact
+   accounts (with these exact passwords) once in the Supabase
+   dashboard under Authentication -> Users -> Add user.
+   ============================================================ */
+const USER_EMAILS = {
+  'showkot':          'showkot@masteronetailors.app',
+  'master1 tailors':  'master1tailors@masteronetailors.app',
+  'admin':            'admin@masteronetailors.app'
+};
+
+let currentUser = null;   // { id, username, role }
+let isAdmin = false;
+
+async function attemptLogin(){
+  const uRaw = document.getElementById('login_user').value.trim();
+  const p = document.getElementById('login_pass').value;
+  const email = USER_EMAILS[uRaw.toLowerCase()];
+  const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+
+  if(!email){
+    errBox.textContent = 'ইউজারনেম সঠিক নয়';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'লগইন হচ্ছে...';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: p });
+  if(error || !data.user){
+    errBox.textContent = 'ভুল: ' + (error ? error.message : 'অজানা সমস্যা');
+  }else{
+    errBox.textContent = '';
+    await afterLogin(data.user, uRaw);
+  }
+  btn.disabled = false;
+  btn.textContent = 'লগইন করুন';
+}
+
+async function afterLogin(sbUser, usernameTyped){
+  let role = 'user';
+  let status = 'active';
+  try{
+    const { data: userReg } = await sb.from('users_register').select('role, status').eq('email', sbUser.email).single();
+    if(userReg){
+      role = userReg.role;
+      status = userReg.status;
+    }
+  }catch(e){ /* default to non-admin if lookup fails */ }
+
+  if(status === 'banned'){
+    document.getElementById('loginError').textContent = 'আপনার অ্যাকাউন্ট ব্লক করা হয়েছে';
+    await sb.auth.signOut();
+    return;
+  }
+
+  currentUser = { id: sbUser.id, username: usernameTyped, role };
+  isAdmin = role === 'admin';
+
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'block';
+  document.getElementById('whoami').textContent =
+    (isAdmin ? 'অ্যাডমিন: ' : 'ইউজার: ') + usernameTyped;
+
+  document.getElementById('serialEditBtn').style.display = isAdmin ? 'inline-block' : 'none';
+
+  if(isAdmin){
+    document.getElementById('tabUsersBtn').style.display = 'block';
+  }
+
+  await loadInitial();
+}
+
+function logout(){
+  sb.auth.signOut();
+  currentUser = null;
+  isAdmin = false;
+  document.getElementById('login_user').value = '';
+  document.getElementById('login_pass').value = '';
+  document.getElementById('appRoot').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+document.getElementById('login_pass').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') attemptLogin();
+});
+
+// stay logged in across reloads on the same device/browser
+sb.auth.onAuthStateChange((event, session)=>{
+  if(session && session.user && !currentUser){
+    const found = Object.entries(USER_EMAILS).find(([, em]) => em === session.user.email);
+    afterLogin(session.user, found ? found[0] : session.user.email);
+  }
+});
+
+/* ============================================================
+   3) DATA / SUPABASE (Postgres, shared across every device, free tier)
+   Table 'customers' holds every measurement record directly - real SQL
+   search means no separate "index" copy is needed even at 10,000+ rows.
+   Table 'meta' holds the running serial counter.
+   Table 'roles' says who is admin - enforced by Postgres Row Level
+   Security, so only admin can actually update/delete a customer row,
+   on the server, not just hidden in this page's UI.
+   ============================================================ */
+let META = { next_serial: 1 };
+let searchDebounce = null;
+
+async function checkUserStatus(){
+  if(!currentUser) return true;
+  try{
+    const { data: userReg } = await sb.from('users_register').select('status').eq('email', USER_EMAILS[currentUser.username.toLowerCase()] || currentUser.username).single();
+    if(userReg && userReg.status === 'banned'){
+      showToast('আপনার অ্যাকাউন্ট ব্লক করা হয়েছে');
+      logout();
+      return false;
+    }
+  }catch(e){ /* silent fail */ }
+  return true;
+}
+
+async function loadInitial(){
+  if(!(await checkUserStatus())) return;
+  try{
+    const { data } = await sb.from('meta').select('next_serial').eq('id', 1).single();
+    if(data) META = data;
+  }catch(e){ /* first run, defaults */ }
+  document.getElementById('orderNoDisplay').textContent = META.next_serial;
+  document.getElementById('f_date').valueAsDate = new Date();
+  renderList();
+}
+
+function onSearchInput(){
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(renderList, 250);
+}
+
+let editingId = null;
+
+function readForm(){
+  return {
+    name: document.getElementById('f_name').value.trim(),
+    mob: document.getElementById('f_mob').value.trim(),
+    date: document.getElementById('f_date').value || null,
+    length: document.getElementById('f_length').value.trim(),
+    chest: document.getElementById('f_chest').value.trim(),
+    belly: document.getElementById('f_belly').value.trim(),
+    hip: document.getElementById('f_hip').value.trim(),
+    shoulder: document.getElementById('f_shoulder').value.trim(),
+    handl: document.getElementById('f_handl').value.trim(),
+    handb: document.getElementById('f_handb').value.trim(),
+    wrist: document.getElementById('f_wrist').value.trim(),
+    notes: document.getElementById('f_notes').value.trim()
+  };
+}
+
+function editSerial(){
+  if(!isAdmin){ showToast('শুধু অ্যাডমিন সিরিয়াল নম্বর পরিবর্তন করতে পারবেন'); return; }
+  const val = prompt('নতুন সিরিয়াল নম্বর দিন:', META.next_serial);
+  if(val && !isNaN(val)){
+    META.next_serial = parseInt(val,10);
+    document.getElementById('orderNoDisplay').textContent = META.next_serial;
+    sb.from('meta').update({ next_serial: META.next_serial }).eq('id', 1).then();
+  }
+}
+
+async function saveRecord(){
+  if(!(await checkUserStatus())) return;
+  const form = readForm();
+  if(!form.name){
+    showToast('অনুগ্রহ করে নাম লিখুন');
+    return;
+  }
+  if(editingId){
+    if(!isAdmin){ showToast('শুধু অ্যাডমিন তথ্য সম্পাদনা করতে পারবেন'); return; }
+    const { error } = await sb.from('customers').update(form).eq('id', editingId);
+    if(error){ showToast('সংরক্ষণে সমস্যা হয়েছে'); return; }
+    editingId = null;
+    showToast('রেকর্ড আপডেট হয়েছে');
+  }else{
+    const id = Date.now().toString();
+    const serial = META.next_serial;
+    const { error } = await sb.from('customers').insert({ id, serial, ...form });
+    if(error){ showToast('সংরক্ষণে সমস্যা হয়েছে'); return; }
+    META.next_serial += 1;
+    await sb.from('meta').update({ next_serial: META.next_serial }).eq('id', 1);
+    document.getElementById('orderNoDisplay').textContent = META.next_serial;
+    showToast('নতুন এন্ট্রি সংরক্ষিত হয়েছে - নং ' + serial);
+  }
+  clearForm();
+  renderList();
+}
+
+function clearForm(){
+  ['f_name','f_mob','f_length','f_chest','f_belly','f_hip','f_shoulder','f_handl','f_handb','f_wrist','f_notes'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f_date').valueAsDate = new Date();
+  editingId = null;
+}
+
+function switchTab(tab){
+  document.getElementById('tabNew').style.display = tab==='new' ? 'block':'none';
+  document.getElementById('tabList').style.display = tab==='list' ? 'block':'none';
+  document.getElementById('tabUsers').style.display = tab==='users' ? 'block':'none';
+  document.getElementById('tabNewBtn').classList.toggle('active', tab==='new');
+  document.getElementById('tabListBtn').classList.toggle('active', tab==='list');
+  document.getElementById('tabUsersBtn').classList.toggle('active', tab==='users');
+  if(tab==='list') renderList();
+  if(tab==='users') renderUsers();
+}
+
+const MAX_RENDER = 60;
+
+async function renderList(){
+  if(!(await checkUserStatus())) return;
+  const container = document.getElementById('listContainer');
+  const q = document.getElementById('searchBox').value.trim();
+  const countInfo = document.getElementById('countInfo');
+
+  let query = sb.from('customers').select('id,serial,name,mob,date', { count: 'exact' })
+    .order('serial', { ascending: false })
+    .limit(MAX_RENDER);
+
+  if(q){
+    const isNumeric = /^\d+$/.test(q);
+    const orParts = [`name.ilike.%${q}%`, `mob.ilike.%${q}%`];
+    if(isNumeric) orParts.push(`serial.eq.${q}`);
+    query = query.or(orParts.join(','));
+  }
+
+  const { data, count, error } = await query;
+  if(error){
+    container.innerHTML = '<div class="empty">তথ্য লোড করতে সমস্যা হয়েছে</div>';
+    countInfo.textContent = '';
+    return;
+  }
+
+  if(!data || data.length===0){
+    container.innerHTML = '<div class="empty">কোনো রেকর্ড পাওয়া যায়নি</div>';
+    countInfo.textContent = '';
+    return;
+  }
+
+  const editDeleteButtons = isAdmin ? `
+        <button onclick="editRecord('{ID}')">✎ এডিট</button>
+        <button onclick="deleteRecord('{ID}')" style="color:var(--danger);border-color:var(--danger);">✕ মুছুন</button>` : '';
+
+  container.innerHTML = data.map(r=>`
+    <div class="record" id="rec-${r.id}">
+      <div class="record-top">
+        <span class="record-name">${escapeHtml(r.name)}</span>
+        <span class="record-serial">নং ${r.serial}</span>
+      </div>
+      <div class="record-sub">${escapeHtml(r.mob||'-')} &nbsp;•&nbsp; ${r.date||'-'}</div>
+      <div class="record-measures" id="measures-${r.id}"></div>
+      <div class="record-actions">
+        <button onclick="toggleDetails('${r.id}')">বিস্তারিত</button>
+        <button onclick="printRecordById('${r.id}')">🖨 প্রিন্ট</button>
+        ${editDeleteButtons.split('{ID}').join(r.id)}
+      </div>
+    </div>
+  `).join('');
+
+  if(!q){
+    countInfo.textContent = `সর্বমোট ${count ?? data.length} জন গ্রাহক — সর্বশেষ ${data.length} জন দেখানো হচ্ছে। নির্দিষ্ট গ্রাহক খুঁজতে উপরে সার্চ করুন।`;
+  }else{
+    countInfo.textContent = `${count ?? data.length} টি ফলাফল পাওয়া গেছে`;
+  }
+}
+
+async function fetchCustomer(id){
+  const { data, error } = await sb.from('customers').select('*').eq('id', id).single();
+  if(error) return null;
+  return data;
+}
+
+async function toggleDetails(id){
+  const box = document.getElementById('measures-' + id);
+  if(box.classList.contains('show')){
+    box.classList.remove('show');
+    return;
+  }
+  box.innerHTML = '<span style="grid-column:1/-1;">লোড হচ্ছে...</span>';
+  box.classList.add('show');
+  const r = await fetchCustomer(id);
+  if(!r){ box.innerHTML = '<span style="grid-column:1/-1;">তথ্য পাওয়া যায়নি</span>'; return; }
+  box.innerHTML = `
+    <span><b>Length</b> ${escapeHtml(r.length||'-')}</span>
+    <span><b>Chest</b> ${escapeHtml(r.chest||'-')}</span>
+    <span><b>Bely</b> ${escapeHtml(r.belly||'-')}</span>
+    <span><b>Hip</b> ${escapeHtml(r.hip||'-')}</span>
+    <span><b>Shoulder</b> ${escapeHtml(r.shoulder||'-')}</span>
+    <span><b>H.L</b> ${escapeHtml(r.handl||'-')}</span>
+    <span><b>H.B</b> ${escapeHtml(r.handb||'-')}</span>
+    <span><b>Wrist</b> ${escapeHtml(r.wrist||'-')}</span>
+    ${r.notes ? `<span style="grid-column:1/-1;"><b>নোট</b> ${escapeHtml(r.notes)}</span>` : ''}
+  `;
+}
+
+async function editRecord(id){
+  if(!isAdmin){ showToast('শুধু অ্যাডমিন তথ্য সম্পাদনা করতে পারবেন'); return; }
+  const r = await fetchCustomer(id);
+  if(!r) { showToast('তথ্য পাওয়া যায়নি'); return; }
+  editingId = id;
+  document.getElementById('f_name').value = r.name||'';
+  document.getElementById('f_mob').value = r.mob||'';
+  document.getElementById('f_date').value = r.date||'';
+  document.getElementById('f_length').value = r.length||'';
+  document.getElementById('f_chest').value = r.chest||'';
+  document.getElementById('f_belly').value = r.belly||'';
+  document.getElementById('f_hip').value = r.hip||'';
+  document.getElementById('f_shoulder').value = r.shoulder||'';
+  document.getElementById('f_handl').value = r.handl||'';
+  document.getElementById('f_handb').value = r.handb||'';
+  document.getElementById('f_wrist').value = r.wrist||'';
+  document.getElementById('f_notes').value = r.notes||'';
+  document.getElementById('orderNoDisplay').textContent = r.serial;
+  switchTab('new');
+  showToast('এডিট মোডে আছেন - নং ' + r.serial);
+}
+
+async function deleteRecord(id){
+  if(!isAdmin){ showToast('শুধু অ্যাডমিন রেকর্ড মুছতে পারবেন'); return; }
+  if(!confirm('আপনি কি নিশ্চিত এই রেকর্ডটি মুছে ফেলতে চান?')) return;
+  const { error } = await sb.from('customers').delete().eq('id', id);
+  if(error){ showToast('মুছতে সমস্যা হয়েছে'); return; }
+  renderList();
+  showToast('রেকর্ড মুছে ফেলা হয়েছে');
+}
+
+async function printRecordById(id){
+  const r = await fetchCustomer(id);
+  if(!r) { showToast('তথ্য পাওয়া যায়নি'); return; }
+  document.getElementById('p_name').textContent = r.name||'';
+  document.getElementById('p_serial').textContent = r.serial;
+  document.getElementById('p_mob').textContent = r.mob||'';
+  document.getElementById('p_date').textContent = r.date||'';
+  document.getElementById('p_length').textContent = r.length||'';
+  document.getElementById('p_chest').textContent = r.chest||'';
+  document.getElementById('p_belly').textContent = r.belly||'';
+  document.getElementById('p_hip').textContent = r.hip||'';
+  document.getElementById('p_shoulder').textContent = r.shoulder||'';
+  document.getElementById('p_handl').textContent = r.handl||'';
+  document.getElementById('p_handb').textContent = r.handb||'';
+  document.getElementById('p_wrist').textContent = r.wrist||'';
+  document.getElementById('p_notes').textContent = r.notes||'';
+  window.print();
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+async function renderUsers(){
+  if(!(await checkUserStatus())) return;
+  const container = document.getElementById('usersContainer');
+  const { data, error } = await sb.from('users_register').select('*').order('created_at', { ascending: true });
+  
+  console.log('renderUsers - data:', data, 'error:', error);
+  
+  if(error || !data){
+    container.innerHTML = '<div class="empty">এরর: ' + (error ? error.message : 'কোনো ডাটা নেই') + '</div>';
+    return;
+  }
+  
+  container.innerHTML = data.map(u=>`
+    <div class="user-card">
+      <div class="user-info">
+        <div class="user-name">${escapeHtml(u.username)}</div>
+        <div class="user-email">${escapeHtml(u.email)}</div>
+        <div class="user-status ${u.status}">
+          ${u.status === 'active' ? '✓ সক্রিয়' : '✕ ব্লক করা'}
+        </div>
+      </div>
+      <button class="toggle-btn ${u.status === 'banned' ? 'banned' : ''}" onclick="toggleUserStatus('${u.email}', '${u.status}')">
+        ${u.status === 'active' ? 'ব্লক করুন' : 'সক্রিয় করুন'}
+      </button>
+    </div>
+  `).join('');
+}
+
+async function toggleUserStatus(email, currentStatus){
+  if(!isAdmin){ showToast('শুধু অ্যাডমিন ইউজার ম্যানেজমেন্ট করতে পারবেন'); return; }
+  const newStatus = currentStatus === 'active' ? 'banned' : 'active';
+  const { error } = await sb.from('users_register').update({ status: newStatus }).eq('email', email);
+  
+  if(error){
+    showToast('স্ট্যাটাস পরিবর্তনে সমস্যা হয়েছে');
+    return;
+  }
+  
+  showToast(newStatus === 'active' ? 'ব্যবহারকারী সক্রিয় করা হয়েছে' : 'ব্যবহারকারী ব্লক করা হয়েছে');
+  renderUsers();
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>

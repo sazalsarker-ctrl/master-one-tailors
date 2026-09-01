@@ -1,0 +1,16 @@
+{
+  "name": "master-one-tailors",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npx cap sync android",
+    "android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/android": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}
